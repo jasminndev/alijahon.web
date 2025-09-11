@@ -8,8 +8,6 @@ from django.utils.text import slugify
 from django.utils.translation import gettext as _
 
 
-# Create your models here.t
-
 class Category(Model):
     image = URLField()
     name = models.CharField(max_length=100)
@@ -27,6 +25,7 @@ class Category(Model):
     def __str__(self):
         return self.name
 
+
 class Product(Model):
     image = ImageField(upload_to='products/%Y/%m/%d')
     title = CharField(max_length=100)
@@ -36,11 +35,12 @@ class Product(Model):
     description = RichTextUploadingField()
     created = DateTimeField(auto_now_add=True)
     updated = DateTimeField(auto_now=True)
-    seller_price = DecimalField(decimal_places=2, max_digits=10, null=True, blank=True )
+    seller_price = DecimalField(decimal_places=2, max_digits=10, null=True, blank=True)
     message = CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.title
+
 
 class Order(Model):
     class OrderStatus(TextChoices):
@@ -53,7 +53,7 @@ class Order(Model):
         ARCHIVED = _('archived'), _('Archived')
 
     customer = ForeignKey('authenticate.User', on_delete=SET_NULL, null=True, blank=True, related_name='orders')
-    product = ForeignKey('apps.Product', on_delete=SET_NULL,null=True, blank=True, related_name='orders')
+    product = ForeignKey('apps.Product', on_delete=SET_NULL, null=True, blank=True, related_name='orders')
     quantity = IntegerField(default=1)
     created = DateTimeField(auto_now_add=True)
     status = CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.NEW)
@@ -63,7 +63,8 @@ class Order(Model):
     comment = TextField(null=True, blank=True)
     thread = ForeignKey('apps.Thread', on_delete=SET_NULL, null=True, blank=True, related_name='orders')
     updated = DateTimeField(auto_now=True, null=True, blank=True)
-    operator = ForeignKey('authenticate.User', on_delete=SET_NULL, null=True, blank=True, related_name='operator_orders')
+    operator = ForeignKey('authenticate.User', on_delete=SET_NULL, null=True, blank=True,
+                          related_name='operator_orders')
     deliver = ForeignKey('authenticate.User', on_delete=SET_NULL, null=True, blank=True, related_name='deliver_orders')
     delivered_date = DateField(null=True, blank=True)
     hold = BooleanField(default=False)
@@ -72,12 +73,14 @@ class Order(Model):
     def __str__(self):
         return self.fullname
 
+
 class WishList(Model):
     user = ForeignKey('authenticate.User', on_delete=CASCADE, related_name='wishlists')
     product = ForeignKey('apps.Product', on_delete=CASCADE, related_name='wishlists')
 
     class Meta:
         unique_together = 'user', 'product'
+
 
 class Thread(Model):
     owner = ForeignKey('authenticate.User', on_delete=CASCADE, related_name='threads')
@@ -91,12 +94,14 @@ class Thread(Model):
     def discount_amount(self):
         return self.product.price - self.discount
 
+
 class SiteStatics(Model):
     delivery_price = DecimalField(decimal_places=2, max_digits=10, null=True, blank=True)
     giveaway_image = ImageField(upload_to='static/giveaway/%Y/%m/%d', null=True, blank=True)
     giveaway_start_time = DateField(null=True, blank=True)
     giveaway_end_time = DateField(null=True, blank=True)
     giveaway_description = RichTextUploadingField(null=True, blank=True)
+
 
 class Withdrawal(Model):
     class WithdrawalStatus(TextChoices):

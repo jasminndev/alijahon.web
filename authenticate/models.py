@@ -49,19 +49,23 @@ class CustomUserManager(UserManager):
         extra_fields.setdefault("is_superuser", False)
         return self._create_user(phone_number, password, **extra_fields)
 
+
 class Region(Model):
     name = CharField(max_length=255)
+
 
 class District(Model):
     name = CharField(max_length=255)
     region = ForeignKey("authenticate.Region", CASCADE, related_name="districts")
 
+
 class User(AbstractUser):
     class UserRoles(TextChoices):
         OPERATOR = 'operator', "Operator"
-        ADMIN = 'admin', "Admin"
+        ADMIN = 'admin', "Admin"                                                                                                                                                                        
         USER = 'user', "User"
         DELIVERER = 'deliverer', "Deliverer"
+
     phone_number = CharField(max_length=15, unique=True)
     objects = CustomUserManager()
     EMAIL_FIELD = None
@@ -71,11 +75,11 @@ class User(AbstractUser):
     address = CharField(max_length=255, blank=True, null=True)
     telegram_id = CharField(max_length=30, blank=True, null=True)
     about = TextField(blank=True, null=True)
-    balance = DecimalField(max_digits=10 , decimal_places=0 , default=0)
+    balance = DecimalField(max_digits=10, decimal_places=0, default=0)
     role = TextField(choices=UserRoles.choices, default=UserRoles.USER)
     email = None
     username = None
-
+                                                        
     @property
     def full_name(self):
         return self.first_name + " " + self.last_name
@@ -83,6 +87,3 @@ class User(AbstractUser):
     @property
     def wishlist_products(self):
         return list(self.wishlists.all().values_list("product_id", flat=True))
-
-
-
