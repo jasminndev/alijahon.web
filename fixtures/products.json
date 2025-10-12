@@ -1,0 +1,18 @@
+[
+  {
+    "model": "apps.Product",
+    "pk": 1,
+    "fields": {
+      "name": "Kamera",
+      "slug": "kamera",
+      "image": "products/img.png",
+      "discount": 10,
+      "seller_price": 20000,
+      "bonus_price": 10000,
+      "price" : 80000,
+      "quantity": 30,
+      "discount_text" :  "Chegirma turi: 2 chi mahsulotdan boshlab har bir mahsulot uchun 30,000 so'm skidka",
+      "category_id" :  1
+    }
+  }
+]

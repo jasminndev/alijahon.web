@@ -1,0 +1,20 @@
+[
+  {
+    "model": "apps.Category",
+    "pk": 1,
+    "fields": {
+      "name": "Uy Uchun",
+      "slug": "uy-uchun",
+      "icon": "https://img.icons8.com/fluency/48/home.png"
+    }
+  },
+  {
+    "model": "apps.Category",
+    "pk": 2,
+    "fields": {
+      "name": "Bolalar uchun",
+      "slug": "bolalar-uchun",
+      "icon": "https://img.icons8.com/external-flaticons-flat-flat-icons/48/external-toys-babymaternity-flaticons-flat-flat-icons.png"
+    }
+  }
+]

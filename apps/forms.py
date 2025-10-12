@@ -1,119 +1,126 @@
-import datetime
 import re
 
+from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
-from django.forms import ModelForm
-from django.utils.translation import gettext as _
+from django.forms import Form, ModelForm
+from django.forms.fields import CharField, IntegerField
 
-from apps.models import Order, SiteStatics, Thread, Product, Withdrawal
-from authenticate.models import User
+from apps.models import User, Order, AdminSetting, Thread, Product, Payment
 
 
-class OrderForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(ModelForm, self).__init__(*args, **kwargs)
-        self.fields['total'].required = False
-        self.fields['thread'].required = False
+class AuthForm(Form):
+    phone_number = CharField(max_length=20)
+    password = CharField(max_length=15)
 
+
+    def clean_phone_number(self):
+        phone_number = self.cleaned_data.get('phone_number')
+        return  re.sub(r'\D', '', str(phone_number))
+
+    def clean_password(self):
+        password = self.cleaned_data.get("password")
+        return make_password(str(password))
+
+    def is_exists(self):
+        phone_number = self.cleaned_data.get("phone_number")
+        password = self.data.get("password")
+        query = User.objects.filter(phone_number=phone_number)
+        if not query.exists():
+            user = User.objects.create_user(phone_number)
+            user.set_password(password)
+            user.save()
+        else:
+            user = query.first()
+            if check_password(password , user.password):
+                return user
+
+
+
+    def save(self):
+        phone_number = self.cleaned_data.get("phone_number")
+        password = self.cleaned_data.get("password")
+        return User.objects.create_user(phone_number=phone_number , password=password)
+
+
+class ProfileModelForm(ModelForm):
+    class Meta:
+        model = User
+        fields = "first_name" , "last_name" , "district" , "address" , "telegram_id" , "about"
+        extra_kwargs = {
+            "district": {"required" : False}
+        }
+
+
+class PasswordForm(Form):
+    old_password = CharField(max_length=10)
+    new_password = CharField(max_length=10)
+    confirm_password = CharField(max_length=10)
+
+    def clean_confirm_password(self):
+        new_password = self.cleaned_data.get("new_password")
+        confirm_password = self.cleaned_data.get("confirm_password")
+        if new_password != confirm_password:
+            raise ValidationError("Confirm passwordda xatolik!")
+
+
+
+class OrderModelForm(ModelForm):
     class Meta:
         model = Order
-        fields = 'fullname', 'phone_number', 'product', 'total', 'thread'
+        fields = 'first_name' , "phone_number" , "owner" , "product" , "thread"
 
-    def clean_total(self):
-        product = self.cleaned_data['product']
-        site = SiteStatics.objects.first()
-        total_price = product.price + site.delivery_price
-        thread_id = self.data.get('thread', None)
-        if thread_id:
-            thread = Thread.objects.get(id=thread_id)
-            total_price -= thread.discount
-        return total_price
+    def save(self, commit = True):
+        obj = super().save(commit=False)
+        admin_setting  = AdminSetting.objects.first()
+        obj.total = float(admin_setting.deliver_price) + float(obj.product.discount_price) - (float(obj.thread.discount_price) if obj.thread else 0)
+        obj.save()
+        return obj
+
+class OrderUpdateModelForm(ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['quantity'].required = False
+        self.fields['deliver_time'].required = False
+    class Meta:
+        model = Order
+        fields = 'quantity' , 'deliver_time' , 'status' , 'comment' , 'district'
+
+
+
 
 class ThreadModelForm(ModelForm):
     class Meta:
         model = Thread
-        fields = "name","discount", "product"
+        fields = 'name' , 'discount_price' , 'product'
 
-    def clean_discount(self):
-        data = self.cleaned_data
-        discount = self.cleaned_data.get("discount")
-        product_id = self.data.get("product")
-        product = Product.objects.get(id=product_id)
+    def clean_discount_price(self):
+        product_id = self.data.get('product')
+        discount_price = self.cleaned_data.get('discount_price')
+        product = Product.objects.filter(id=product_id).first()
+        if product.seller_price < discount_price:
+            raise ValidationError('Chegirma miqdori oshib ketdi !')
+        return discount_price
 
-        if discount > product.seller_price:
-            raise ValidationError(_("Discount exceeded the limit"))
-        return discount
 
-class WithdrawalModelForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)
-        super(ModelForm, self).__init__(*args, **kwargs)
-        self.fields['user'].required = False
+    def clean_product(self):
+        product_id = self.data.get('product')
+        return Product.objects.filter(id=product_id).first()
 
+
+
+class PaymentModelForm(ModelForm):
     class Meta:
-        model = Withdrawal
-        fields = "card_number", "amount", 'user'
+        model = Payment
+        fields = 'card_number' , 'pay_amount' , 'owner'
 
-    def clean_user(self):
-        return self.user
-    def clean_amount(self):
-        amount = self.cleaned_data.get('amount')
-        user = self.user
-        if amount <= 0:
-            raise ValidationError(_("Amount cannot be negative"))
-        if amount > user.balance:
-            raise ValidationError(_("You don't have enough money"))
-        return amount
-
-    def clean_card_number(self):
-        card_number = self.cleaned_data.get('card_number')
-        pattern = r'^[1-9][0-9]{10}$'
-        card_number = re.sub(pattern, '', card_number)
-        return card_number
-
-class OrderUpdateModelForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        self.order = kwargs.pop('order', None)
-        self.employee = kwargs.pop('employee', None)
-        super(ModelForm, self).__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.required = False
-
-    class Meta:
-        model = Order
-        fields = 'quantity' , 'delivered_date' , 'status' , 'comment' , 'district' , 'operator', 'deliver'
-
-    def clean_operator(self):
-        if self.employee.role == User.UserRoles.OPERATOR:
-            return self.employee
-
-    def clean_deliver(self):
-        if self.employee.role == User.UserRoles.DELIVERER:
-            return self.employee
-
-    def clean_quantity(self):
-        quantity = self.cleaned_data.get('quantity')
-        site = SiteStatics.objects.first()
-        order = self.order
-
-
-        if quantity > order.product.quantity:
-            raise ValidationError(_("The product quantity cannot be greater than the product quantity"))
-        if quantity <= 0:
-            raise ValidationError(_("The product quantity cannot be negative"))
-        if order.thread:
-            order.total = order.thread.discount_amount * quantity + site.delivery_price
-        else:
-            order.total = order.product.price * quantity + site.delivery_price
-        order.save()
-        return quantity
-
-    def clean_delivered_date(self):
-        delivered_date = self.cleaned_data.get('delivered_date')
-        now = datetime.date.today()
-        if delivered_date and delivered_date < now:
-            raise ValidationError(_("The delivered date cannot be less than the current date"))
-        return delivered_date
+    def clean_pay_amount(self):
+        owner_id = self.data.get('owner')
+        pay_amount = self.cleaned_data.get('pay_amount')
+        owner = User.objects.get(pk=owner_id)
+        if owner.balance < pay_amount:
+            raise ValidationError(f"Balance da pul yetarli emas")
+        return pay_amount
 
 
 

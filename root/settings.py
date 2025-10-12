@@ -1,56 +1,44 @@
-import os
-from os import getenv
 from os.path import join
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
+from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "hagsfdjhlwgvfjlwgdfehrtjrhjhjfgh"
+SECRET_KEY = 'django-insecure-&qj27pl9ivw0w6104zepl0^^@9p0^+0(ib%2znmm9k6v+j!l+b'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
+AUTH_USER_MODEL = 'apps.User'
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    'unfold',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.admin',
     'django.contrib.humanize',
-    'django.contrib.sites',
+    'ckeditor',
+    'parler',
+    'django_celery_results',
+    'django_celery_beat'
     # my apps
     'apps',
-    'authenticate',
-    # third part apps
-    'ckeditor',
-    'ckeditor_uploader',
-]
-USE_L10N = True
 
-LANGUAGES = [
-    ("en", "English"),
-    ("uz", "Uzbek"),
-    ("ru", "Russian"),
-]
-LOCALE_PATHS = [
-    join(BASE_DIR, 'locale'),
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    "django.middleware.locale.LocaleMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.locale.LocaleMiddleware"
 ]
 
 ROOT_URLCONF = 'root.urls'
@@ -73,13 +61,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'root.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': "postgres",
+        'HOST': "localhost",
+        'PORT': 5432,
+        'PASSWORD': 1111,
+        'USER': "postgres"
     }
 }
 
@@ -98,7 +87,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 
 TIME_ZONE = 'UTC'
 
@@ -106,21 +95,58 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = 'static/'
-STATIC_ROOT = join(BASE_DIR / 'static')
-
 MEDIA_URL = 'media/'
-MEDIA_ROOT = join(BASE_DIR / 'media')
-
-CKEDITOR_UPLOAD_PATH = "uploads/"
+MEDIA_ROOT = join(BASE_DIR, 'media')
+STATIC_URL = 'static/'
+STATIC_ROOT = join(BASE_DIR, 'static')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+CKEDITOR_UPLOAD_PATH = 'uploads/'
+CKEDITOR_IMAGE_BACKEND = "pillow"
+CKEDITOR_CONFIGS = {
+    'default':
+        {
+            'toolbar': 'full',
+            'width': 'auto',
+            'extraPlugins': ','.join([
+                'codesnippet',
+            ]),
+        },
+}
 
-AUTH_USER_MODEL = 'authenticate.User'
-
-LOGIN_URL = 'auth'
-LOGIN_REDIRECT_URL = 'auth'
-
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
+LANGUAGES = [
+    ("uz", _("Uzbek")),
+    ("en", _("English")),
+    ("ru", _("Russian")),
 ]
+
+LOCALE_PATHS = [
+    join(BASE_DIR, 'locale'),
+]
+
+PARLER_LANGUAGES = {
+    None: (
+        {'code': 'en', },
+        {'code': 'uz', },
+        {'code': 'ru', },
+    ),
+    'default': {
+        'fallbacks': ['en'],
+        'hide_untranslated': False,
+    }
+}
+
+CELERY_TIMEZONE = "Asia/Tashkent"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+CELERY_RESULT_BACKEND = 'django-db'
+
+CELERY_CACHE_BACKEND = 'default'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+    }
+}
+CELERY_BROKER_URL = 'redis://localhost:6379/0'

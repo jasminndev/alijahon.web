@@ -1,0 +1,135 @@
+{% extends "apps/base/include.html" %}
+
+{% block body %}
+<div class="row g-0">
+    <div class="col-lg-8 pe-lg-2">
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.level == 40 %}
+                    <h3 style="color: red">{{ message }}</h3>
+                {% else %}
+                    <h3 style="color: green">{{ message }}</h3>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+
+        <div class="card mb-3">
+
+            <div class="card-header">
+                <h5 class="mb-0">Sozlamalar</h5>
+            </div>
+            <div class="card-body bg-light">
+
+                <form class="row g-3" method="post" action="{% url 'profile' request.user.pk %}"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="col-lg-6">
+                        Ismi
+                        <input type="text" name="first_name"
+                               value="{% if request.user.first_name != "None" %}{{ request.user.first_name }}{% endif %}"
+                               class="form-control" maxlength="30" id="id_first_name">
+
+                    </div>
+
+                    <div class="col-lg-6">
+                        Familiya
+                        <input type="text" name="last_name"
+                               value="{% if request.user.last_name != "None" %}{{ request.user.last_name }}{% endif %}"
+                               class="form-control" maxlength="40" id="id_last_name">
+
+                    </div>
+
+                    <div class="col-lg-6">
+                        Viloyat
+                        <select name="region" class="form-control" id="id_region">
+                            <option value="Viloyatni tanlang" selected>Viloyatni tanlang</option>
+                            {% for region in regions %}
+                                <option value="{{ region.pk }}" {% if request.user.district.region.pk == region.pk %}
+                                        selected {% endif %}>{{ region.name }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+                    <div class="col-lg-6">
+                        Tuman/Shaxar
+                        <select name="district" class="form-control" id="id_district">
+                            {% if request.user.district %}
+                                <option value="Viloyatni tanlang">{{ request.user.district.name }}</option>
+                            {% else %}
+                                <option value="" selected >Tuman/Shahar tanlang</option>
+                            {% endif %}
+                        </select>
+
+                    </div>
+
+                    <div class="col-lg-6">
+                        Manzil
+                        <input type="text" name="address"
+                               value="{% if request.user.address != "None" %}{{ request.user.address }}{% endif %}"
+                               class="form-control" maxlength="200" id="id_location">
+
+                    </div>
+
+                    <div class="col-lg-6">
+                        Telegram id
+                        <input type="text" name="telegram_id"
+                               value="{% if request.user.telegram_id != "None" %}{{ request.user.telegram_id }}{% endif %}"
+                               class="form-control" maxlength="200" id="id_telegram_id">
+
+                    </div>
+
+                    <div class="col-lg-6">
+                        Siz haqingizda
+                        <textarea name="about" cols="40" rows="10" class="form-control" maxlength="399"
+                                  id="id_description">{% if request.user.about != "None" %}{{ request.user.about }}{% endif %}</textarea>
+
+                    </div>
+
+
+                    <div class="col-12 d-flex justify-content-end">
+                        <button class="btn btn-primary" type="submit">Saqlash</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+
+    </div>
+    <div class="col-lg-4 ps-lg-2">
+        <div class="sticky-sidebar">
+
+
+            <div class="card mb-3">
+
+                <div class="card-header">
+                    <h5 class="mb-0">Parolni o'zgartirish</h5>
+                </div>
+                <div class="card-body bg-light">
+                    <form action="{% url 'change-password' %}" method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label" for="old-password">Oldingi parol</label>
+                            <input class="form-control" id="old-password" name="old_password" type="password">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="new-password">Yangi parol</label>
+                            <input class="form-control" id="new-password" name="new_password" type="password">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="confirm-password">Yangi parolni
+                                takrorlash</label>
+                            <input class="form-control" id="confirm-password" name="confirm_password" type="password">
+                        </div>
+                        <button class="btn btn-primary d-block w-100" type="submit">Parolni yangilash
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

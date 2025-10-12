@@ -1067,7 +1067,7 @@
   --dark-background-color: #232e3c;
   --dark-hover-color: #344050;
   --dark-border-color: #344050;
-  --dark-search-background-color:input-bg;
+  --dark-search-background-color: $input-bg;
   --dark-search-border-color: #344050;
   --search-icon-color: #4d5969;
   --dark-category-button-color: #9da9bb;
@@ -1097,7 +1097,7 @@ body {
   font-weight: var(--falcon-body-font-weight);
   line-height: var(--falcon-body-line-height);
   color: var(--falcon-body-color);
-  /*text-align: var(--falcon-body-text-align);*/
+  text-align: var(--falcon-body-text-align);
   background-color: var(--falcon-body-bg);
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);

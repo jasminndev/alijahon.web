@@ -1,0 +1,80 @@
+version: "2.36.1"
+
+
+services:
+  django:
+    build: .
+    image: alijahon
+    container_name: alijahon_con
+    restart: always
+    command: 'sh -c "python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"'
+    ports:
+      - "8000:8000"
+
+  db:
+    image: postgres:alpine
+    container_name: alijahon_db
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=1
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  celery_worker:
+    build: .
+    image: django_celery
+    command: 'sh -c "celery -A root worker -l INFO"'
+    volumes:
+      - .:/app
+    environment:
+      - CELERY_BROKER=redis://172.17.0.2:6379/0
+      - CELERY_BACKEND=redis://172.17.0.2:6379/0
+    depends_on:
+      - redis
+      - db
+
+  redis:
+    image: redis:7-alpine
+
+  celery_beat:
+    build: .
+    image: django_celery_example_celery_beat
+    command: 'sh -c "celery -A root beat -l info -S django"'
+    volumes:
+      - .:/app
+    environment:
+      - CELERY_BROKER=redis://172.17.0.2:6379/0
+      - CELERY_BACKEND=redis://172.17.0.2:6379/0
+    depends_on:
+      - redis
+      - db
+
+  flower:
+    build: .
+    image: django_celery_example_celery_flower
+    command: 'sh -c "celery -A root flower"'
+    volumes:
+      - .:/app
+    environment:
+      - CELERY_BROKER=redis://172.17.0.2:6379/0
+      - CELERY_BACKEND=redis://172.17.0.2:6379/0
+    ports:
+      - 5555:5555
+    depends_on:
+      - redis
+      - db
+
+
+
+
+
+volumes:
+  pgdata:
+
+
+
+
+
+

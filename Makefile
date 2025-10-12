@@ -1,21 +1,31 @@
 mig:
-	python3 manage.py makemigrations
-	python3 manage.py migrate
+	python manage.py makemigrations
+	python manage.py migrate
+
+
+fix:
+	python manage.py loaddata categories products districts regions
+
 
 admin:
-	python3 manage.py createsuperuser
+	python manage.py createsuperuser
 
-loaddata:
-	python3 manage.py loaddata apps/fixtures/product.json
-
-
-dumpdata:
-	python3 manage.py dumpdata apps.Product > product.json
-
-translate:
-	django-admin makemessages -l uz
-	django-admin makemessages -l en
-	django-admin makemessages -l ru
+lang:
+	python manage.py makemessages -l uz
+	python manage.py makemessages -l en
+	python manage.py makemessages -l ru
 
 compile:
-	django-admin compilemessages
+	python manage.py compilemessages
+
+celery:
+	celery -A root worker -l INFO
+
+flower:
+	celery -A root flower
+
+
+beat:
+	celery -A root beat -l info -S django
+
+
