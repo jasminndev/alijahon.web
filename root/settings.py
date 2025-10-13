@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     'ckeditor',
     'parler',
     'django_celery_results',
-    'django_celery_beat'
+    'django_celery_beat',
     # my apps
     'apps',
 
